@@ -1,0 +1,102 @@
+!!!!!***** stavi klase na PUBLIC *****!!!!!
+
+--Za auto refresh i cuvanje podataka tj unos preko dataGridView se koristi BindingList
+
+--vezivanje BListe za dgv: dgvNesto.DataSource = bLista
+
+--u initializeComponent na formi: this.dgvAsistenti.AllowUserToAddRows = false;
+
+--da ubacimo red u DGV sa bounding listom samo dodamo element u listu i to je to 
+
+-- U DGV ubacivanje checkbox-a(ovo se radi svaki put kad ubacujemo red u BListu): 
+DataGridViewComboBoxCell cmbPredmeti = new DataGridViewComboBoxCell();
+
+--DGV dodavanje kolone:
+    dgvRaspored.DataSource = listaRasporeda;
+    dgvRaspored.Columns.Add("Name", "Display name");
+
+--davanje vrenosti u tu kolonu:
+    dgvRaspored.Rows[listaRasporeda.Count() - 1].Cells["Name"].Value = ....;
+
+--DGV ne moze kolona da se edituje:
+    [ReadOnly(true)] ili ako sam rucno napravio kolonu onda dataGridView.Columns["YourColumnName"].ReadOnly = true;
+
+*****pazi da ne zaboravis ovo display i value member!!*****
+
+                cmbPredmeti.DataSource = Broker.dajSesiju().vratiPredmete();
+                cmbPredmeti.DisplayMember = "Naziv";
+                cmbPredmeti.ValueMember = "ObjekatPredmet";
+dgvAsistenti.Rows[listaAsistenata.Count - 1].Cells["Predmet"] = cmbPredmeti;
+*****p.s. listaAsistenata odzgo je BoundingList*****
+
+--uzimanje reda iz BListe:
+Asistent a = dgvAsistenti.SelectedRows[0].DataBoundItem as Asistent;
+    		+++++
+--brisanje iz dgv: samo taj element izbrisemo iz liste (npr. listaAsistenata.Remove(a);)
+
+--message box: MessageBox.Show("poruka");
+
+--otvaranje novog prozora:  new DetaljiPredmet(a.Predmet).ShowDialog();
+
+--zatvaranje postojeceg prozora: this.Close();
+
+--sklanjanje elementa iz dgv-u modelu:
+[Browasble(false)], za ime [DisplayName("ime prezime")]
+
+-- load combobox-a se radi u konstrukoru
+--dodavanje u listu na prvo mesto:
+	lista.Insert(0, initialItem);
+
+
+--TRANSAKCIJA:
+*****************************************    
+**u def klase: **  
+        OleDbCommand komanda;
+        OleDbConnection konekcija;
+        OleDbTransaction transakcija;    
+  *****************************************      
+try
+            {
+                konekcija.Open();
+                transakcija = konekcija.BeginTransaction();
+
+                int rezultat = 0;
+
+                foreach (Asistent a in asistenti)
+                {
+                    string upit = "Insert into TAsistent Values (" + a.Sifra + ", '" + a.Ime + "', '" + a.Prezime + "', '" + a.Titula + "', " + a.Predmet.Sifra + ")";
+                    komanda = new OleDbCommand(upit, konekcija, transakcija);
+
+                    rezultat = komanda.ExecuteNonQuery();
+                }
+
+                transakcija.Commit();
+
+                return rezultat;
+            }
+            catch (Exception ex)
+            {
+                transakcija.Rollback();
+                throw ex;
+            }
+
+
+--sql insert:
+UPDATE table_name
+SET column1 = value1, column2 = value2, ...
+WHERE condition;
+
+--sql delete:
+DELETE FROM table_name
+WHERE [condition];
+
+--sql insert:
+INSERT INTO TABLE_NAME (column1, column2, column3,...columnN)  
+VALUES (value1, value2, value3,...valueN);
+
+--LINQ: 
+***sort:
+	List<Order> SortedList = objListOrder.OrderBy(o=>o.OrderDate).ToList();
+	List<Order> SortedList = objListOrder.OrderByDescending(o=>o.OrderDate).ToList();
+***where: 
+	 List<Prijava> filter = listaPrijava.Where(p => p.SifraPredmeta.Naziv == izabranPredmet.Naziv).ToList();

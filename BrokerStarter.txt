@@ -1,0 +1,114 @@
+        OleDbCommand komanda;
+        OleDbConnection konekcija;
+        OleDbTransaction transakcija;
+
+
+        private static Broker broker;
+
+        public static Broker DajBrokera()
+        {
+            if (broker == null)
+            {
+                broker = new Broker();
+            }
+
+            return broker;
+        }
+
+        private Broker()
+        {
+            konektujSe();
+        }
+
+        private void konektujSe()
+        {
+            konekcija = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=D:\Fax\Projektovanje softvera\vezba_1_kolok\Kolok2015G1\baza.accdb");
+            komanda = konekcija.CreateCommand();
+        }
+        private void ZatvoriKonekciju()
+        {
+            if (konekcija != null)
+            {
+                konekcija.Close();
+            }
+        }
+
+        //***** INSERT I UPDATE *****
+        // isto i za delete: DELETE FROM table_name WHERE [condition]; 
+         public bool ubaciIliUpdatePolaganja(Prijava p)
+        {
+            try
+            {
+                konekcija.Open();
+                transakcija = konekcija.BeginTransaction();
+
+                int rezultat = 0;
+
+
+                string upit = String.Format("UPDATE TPrijava SET datum = '{0}', ocena = {1} WHERE brojIndexa = '{2}' AND sifraPredmeta = {3}", p.Datum, p.Ocena, p.BrojIndexa.BrojIndeksa, p.SifraPredmeta.SifraPredmeta);
+                komanda = new OleDbCommand(upit, konekcija, transakcija);
+
+                rezultat = komanda.ExecuteNonQuery();
+
+                if(rezultat == 0)
+                {
+                    string query = String.Format("INSERT INTO TPrijava (datum, ocena, brojIndexa, sifraPredmeta) VALUES ('{0}', {1}, '{2}', {3})", p.Datum, p.Ocena, p.BrojIndexa.BrojIndeksa, p.SifraPredmeta.SifraPredmeta);
+                    komanda = new OleDbCommand(query, konekcija, transakcija);
+
+                    rezultat = komanda.ExecuteNonQuery();
+                    if(rezultat == 0)
+                    {
+                        return false;
+                    }
+                }
+
+                transakcija.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                transakcija.Rollback();
+                throw ex;
+            }
+            finally
+            {
+                ZatvoriKonekciju();
+            }
+        }
+
+        //***** SELECT *****
+        public List<Predmet> vratiSvePredmete()
+        {
+            List<Predmet> predmeti = new List<Predmet>();
+
+            try
+            {
+
+
+                konekcija.Open();
+                komanda.CommandText = "Select * from TPredmet";
+
+                OleDbDataReader citac = komanda.ExecuteReader();
+                //*** moze if ako znam da ce se vratiti samo 1 record (npr imam where po id-u)
+                while (citac.Read())
+                {
+                    Predmet predmet = new Predmet
+                    {
+                        SifraPredmeta = Convert.ToInt32(citac["sifraPredmeta"]),
+                        Naziv = citac["naziv"].ToString()
+                    };
+                    predmeti.Add(predmet);
+                }
+
+                return predmeti;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                ZatvoriKonekciju();
+            }
+        }
