@@ -8,9 +8,6 @@
 
 --da ubacimo red u DGV sa bounding listom samo dodamo element u listu i to je to 
 
--- U DGV ubacivanje checkbox-a(ovo se radi svaki put kad ubacujemo red u BListu): 
-DataGridViewComboBoxCell cmbPredmeti = new DataGridViewComboBoxCell();
-
 --DGV dodavanje kolone:
     dgvRaspored.DataSource = listaRasporeda;
     dgvRaspored.Columns.Add("Name", "Display name");
@@ -20,6 +17,9 @@ DataGridViewComboBoxCell cmbPredmeti = new DataGridViewComboBoxCell();
 
 --DGV ne moze kolona da se edituje:
     [ReadOnly(true)] ili ako sam rucno napravio kolonu onda dataGridView.Columns["YourColumnName"].ReadOnly = true;
+    
+-- U DGV ubacivanje checkbox-a(ovo se radi svaki put kad ubacujemo red u BListu): 
+DataGridViewComboBoxCell cmbPredmeti = new DataGridViewComboBoxCell();
 
 *****pazi da ne zaboravis ovo display i value member!!*****
 
